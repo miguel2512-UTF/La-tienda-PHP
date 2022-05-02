@@ -60,7 +60,8 @@ Route::get('paises' , function(){
             "poblacion" => 32.97,
             "ciudades" => [
                 "Cusco",
-                "Piura"
+                "Piura",
+                "Ayacucho"
             ]
         ],  
         "Paraguay" => [

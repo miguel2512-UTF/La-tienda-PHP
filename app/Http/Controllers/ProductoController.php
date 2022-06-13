@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Producto;
 use App\Models\Marca;
+use App\Models\Categoria;
 use Illuminate\Http\Request;
 
 class ProductoController extends Controller
@@ -30,7 +31,7 @@ class ProductoController extends Controller
         $marcas = Marca::all();
 
         //seleccionar categorias
-        $categoria = Categoria::all();
+        $categorias = Categoria::all();
         return view("productos.new")
                 ->with('categorias' , $categorias)
                 ->with('marcas' , $marcas);
@@ -44,7 +45,28 @@ class ProductoController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        /*echo "<pre>";
+        var_dump($request->nombre);
+        echo "</pre>";*/
+
+        $archivo = $request->imagen;
+        $nombre_archivo = $archivo->getClientOriginalName();
+        var_dump($nombre_archivo);
+        
+        //Mover el archivo a la carpeta img
+        $ruta = public_path();
+        $archivo->move("$ruta/img", $nombre_archivo);
+
+        //registrar producto
+        $producto = new Producto;
+        $producto->nombre = $request->nombre;
+        $producto->descripcion = $request->desc;
+        $producto->precio = $request->precio;
+        $producto->imagen = $nombre_archivo;
+        $producto->marca_id = $request->marca;
+        $producto->categoria_id = $request->categoria;
+        $producto->save();
+        echo "producto registrado";
     }
 
     /**

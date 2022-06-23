@@ -6,6 +6,7 @@ use App\Models\Producto;
 use App\Models\Marca;
 use App\Models\Categoria;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class ProductoController extends Controller
 {
@@ -26,7 +27,7 @@ class ProductoController extends Controller
      */
     public function create()
     {
-        echo "aqui va el formulario para registrar producto";
+        //echo "aqui va el formulario para registrar producto";
         //seleccionar marcas
         $marcas = Marca::all();
 
@@ -49,24 +50,63 @@ class ProductoController extends Controller
         var_dump($request->nombre);
         echo "</pre>";*/
 
-        $archivo = $request->imagen;
-        $nombre_archivo = $archivo->getClientOriginalName();
-        var_dump($nombre_archivo);
-        
-        //Mover el archivo a la carpeta img
-        $ruta = public_path();
-        $archivo->move("$ruta/img", $nombre_archivo);
+        //Validación
+        //Establecer Reglas de Validación
+        $reglas = [
+            "nombre" => 'required|alpha|unique:productos,nombre',
+            "desc" => 'required|min:10|max:20',
+            "precio" => 'required|numeric',
+            "imagen" => 'required|image',
+            "marca" => 'required',
+            "categoria" => 'required'
+        ];
 
-        //registrar producto
-        $producto = new Producto;
-        $producto->nombre = $request->nombre;
-        $producto->descripcion = $request->desc;
-        $producto->precio = $request->precio;
-        $producto->imagen = $nombre_archivo;
-        $producto->marca_id = $request->marca;
-        $producto->categoria_id = $request->categoria;
-        $producto->save();
-        echo "producto registrado";
+        $mensajes=[
+            "required" => "Campo obligatorio",
+            "alpha" => "Solo letras",
+            "numeric" => "Solo números",
+            "image" => "Debe ser un archivo de imagen",
+            "min" => "minimo :min valor"
+        ];
+
+        //2. Crear Objeto Validador
+        $v = Validator::make($request->all(), $reglas, $mensajes);
+
+        //3. Validar
+        //Fails() retorna: 
+        //True si la validación falla
+        //False si los datos son validos
+        if ($v->fails()) {
+            //validación incorrecta
+            //mostrar la vista llevando los errores
+            return redirect('productos/create')
+                ->withErrors($v);
+            //var_dump($v->errors());
+        }else {
+            //validación correcta
+            $archivo = $request->imagen;
+            $nombre_archivo = $archivo->getClientOriginalName();
+            var_dump($nombre_archivo);
+            
+            //Mover el archivo a la carpeta img
+            $ruta = public_path();
+            $archivo->move("$ruta/img", $nombre_archivo);
+
+            //registrar producto
+            $producto = new Producto;
+            $producto->nombre = $request->nombre;
+            $producto->descripcion = $request->desc;
+            $producto->precio = $request->precio;
+            $producto->imagen = $nombre_archivo;
+            $producto->marca_id = $request->marca;
+            $producto->categoria_id = $request->categoria;
+            $producto->save();
+            
+            return redirect('productos/create')
+                ->with("mensaje", "producto registrado");
+        }
+
+        
     }
 
     /**
